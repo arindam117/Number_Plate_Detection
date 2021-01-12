@@ -1,0 +1,50 @@
+import cv2 as cv
+import numpy as np
+
+imgWidth = 460  # std size width = 460 and Height = 320
+imgHeight = 320
+nplate_cascade = cv.CascadeClassifier('numberplate.xml')
+
+minArea = 500
+
+cap = cv.VideoCapture(0)
+# 3 is for width and frameWidth = 640, we can directly put 360 as well in place of frameWidth in cap.set()
+cap.set(3, imgWidth)
+# 4 is for height and we already have made the frameHeight variable = 480
+cap.set(4, imgHeight)
+# 10 is the id for brightness and 130 is its parameter
+cap.set(10, 150)
+count = 0
+
+
+while True:
+    success,img = cap.read()
+    img = cv.resize(img,(imgWidth,imgHeight))
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)  # THis will change the color of the webcam input
+    faces = nplate_cascade.detectMultiScale(gray, 1.1, 4)
+    cv.imshow('Original',img)
+
+    for x, y, w, h in faces:
+        area = w * h
+        if area > minArea:
+            cv.rectangle(img, (x, y), (x + w, y + h), (0,255, 0), 2)
+            objectType = "Number Plate Detected"
+            cv.putText(img,objectType,(x+(w//2)-50,y+(h//2)-80),cv.FONT_HERSHEY_COMPLEX,0.5,(255,255,255),2)
+
+            # Getting the separate cropped out number plate image in a separate window
+
+            # y:y+h is the total height, x:x+w gives the region of the number plate
+            num_plate_cropped = img[y:y+h,x:x+w]
+            num_plate_cropped = cv.resize(num_plate_cropped,(360,360))
+            cv.imshow('Extracted Number Plate',num_plate_cropped)
+        cv.imshow('Result',img)
+
+    if cv.waitKey(1) & 0xFF == ord('q'):  # (here use zero x FF = 0xFF)
+        break
+
+cap.release()
+cv.destroyAllWindows()
+
+
+![Screenshot (883)](https://user-images.githubusercontent.com/46881796/104301806-14a15880-54ee-11eb-8143-21468a3ded7f.png)
+
